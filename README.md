@@ -25,23 +25,27 @@ Ce dashboard utilise **Google Gemini** pour analyser les logs des conteneurs et 
 
 ---
 
-## ⚠️ IMPORTANT : Mode Simulation vs Vraies Données
+## ⚙️ Architecture (Backend vs Frontend)
 
-**Par défaut, cette application fonctionne en mode "Simulation".**
-C'est une application Frontend (React) qui tourne dans votre navigateur. Pour des raisons de sécurité, elle ne peut pas lire directement votre CPU, votre RAM ou vos conteneurs Docker.
+**L'application ne fonctionne PAS en mode autonome.**
+Puisque c'est une interface web (React), elle a besoin d'un **Backend** pour lire les informations de Docker sur votre serveur.
 
-### Comment afficher les VRAIES ressources de mon serveur ?
+Il y a donc **2 parties** à lancer :
+1.  **Le Backend (API)** : Un petit script Node.js sur le port 3001 qui parle à Docker.
+2.  **Le Frontend (Dashboard)** : L'interface visuelle sur le port 80 (Nginx) ou 8080 (Docker).
 
-Pour connecter ce dashboard à votre serveur Linux réel, vous devez créer un petit serveur API (Backend) qui fera le pont entre React et Docker.
+### 1. Installation du Backend (Obligatoire)
 
-Voici le script `server.js` (Node.js) que vous devrez utiliser :
+Sur votre serveur, installez les dépendances et créez le script API :
 
-1.  Installez les bibliothèques nécessaires sur votre serveur :
+1.  Installez les modules nécessaires :
     ```bash
+    mkdir backend && cd backend
+    npm init -y
     npm install express cors dockerode systeminformation
     ```
 
-2.  Créez un fichier `server.js` à côté de votre dossier `dist` :
+2.  Créez un fichier `server.js` dans ce dossier :
     ```javascript
     const express = require('express');
     const Docker = require('dockerode');
@@ -81,14 +85,19 @@ Voici le script `server.js` (Node.js) que vous devrez utiliser :
     app.listen(3001, () => console.log('Backend running on port 3001'));
     ```
 
-3.  Lancez ce serveur avec `node server.js`.
-4.  Modifiez le code React (`App.tsx`) pour faire des `fetch('http://votre-ip:3001/api/containers')` au lieu d'utiliser `INITIAL_CONTAINERS`.
+3.  **Lancer le Backend en tâche de fond** (avec PM2 pour qu'il reste allumé) :
+    ```bash
+    sudo npm install -g pm2
+    pm2 start server.js --name "andorya-backend"
+    pm2 save
+    pm2 startup
+    ```
 
 ---
 
-## 🛠️ Méthode 1 : Installation Classique (Nginx + Node.js)
+## 🛠️ Méthode 1 : Installation du Frontend (Classique Nginx)
 
-Cette méthode est recommandée pour les performances et la gestion via un serveur web standard.
+Cette méthode est recommandée pour les performances.
 
 ### Étape 1 : Préparer le système
 
@@ -108,20 +117,14 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
 ```
 
-Vérifiez l'installation :
-```bash
-node -v
-npm -v
-```
-
 ### Étape 3 : Cloner et Installer l'application
 
-Naviguez vers le dossier web et clonez le projet (remplacez l'URL par celle de votre dépôt) :
+Naviguez vers le dossier web et clonez le projet :
 
 ```bash
 cd /var/www
-sudo git clone https://github.com/Dj-tim78/dashboard.git
-cd dashboard
+sudo git clone https://votre-repo-git/andorya-dashboard.git
+cd andorya-dashboard
 ```
 
 Installez les dépendances :
@@ -129,47 +132,34 @@ Installez les dépendances :
 sudo npm install
 ```
 
-### Étape 4 : Configuration et Build
+### Étape 4 : Build
 
-Assurez-vous que votre fichier `.env` est créé comme décrit dans la section **Configuration** ci-dessus.
+Assurez-vous que votre fichier `.env` est créé avec la clé API.
 
-```bash
-sudo nano .env
-# Collez votre API_KEY=...
-```
-
-Compilez l'application pour la production :
 ```bash
 sudo npm run build
 ```
-*Cela créera un dossier `dist/` contenant les fichiers statiques optimisés.*
 
 ### Étape 5 : Configurer Nginx
 
-Créez une configuration Nginx pour le dashboard :
+Créez une configuration Nginx :
 
 ```bash
 sudo nano /etc/nginx/sites-available/andorya
 ```
 
-Copiez la configuration suivante :
+Collez la configuration :
 
 ```nginx
 server {
     listen 80;
-    server_name votre-domaine.com ou_votre_ip;
+    server_name votre-ip-ou-domaine;
 
-    root /var/www/dashboard/dist;
+    root /var/www/andorya-dashboard/dist;
     index index.html;
 
     location / {
         try_files $uri $uri/ /index.html;
-    }
-
-    # Cache pour les assets statiques
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
-        expires 1y;
-        add_header Cache-Control "public, no-transform";
     }
 }
 ```
@@ -182,91 +172,68 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-### Étape 6 : Permissions
-
-Assurez-vous que Nginx peut lire les fichiers :
-
-```bash
-sudo chown -R www-data:www-data /var/www/dashboard/dist
-sudo chmod -R 755 /var/www/dashboard/dist
-```
-
-🎉 **Votre dashboard est accessible sur `http://votre-ip` !**
-
 ---
 
-## 🐳 Méthode 2 : Installation via Docker
+## 🐳 Méthode 2 : Installation du Frontend (Docker)
 
-Si vous préférez exécuter le dashboard lui-même dans un conteneur.
+### Étape 1 : Créer le Dockerfile
 
-### Étape 1 : Installer Docker (si ce n'est pas fait)
-
-```bash
-sudo apt install -y docker.io
-sudo systemctl start docker
-sudo systemctl enable docker
-```
-
-### Étape 2 : Créer le Dockerfile
-
-À la racine du projet, créez un fichier `Dockerfile` :
+À la racine du projet :
 
 ```dockerfile
-# Build Stage
 FROM node:20-alpine as build
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-# Remplacez par votre clé ou passez-la en ARG lors du build
 ENV API_KEY=votre_cle_api_ici 
 RUN npm run build
 
-# Production Stage
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
-# Configuration Nginx pour le support SPA (React Router)
 RUN echo 'server { listen 80; root /usr/share/nginx/html; index index.html; location / { try_files $uri $uri/ /index.html; } }' > /etc/nginx/conf.d/default.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
-### Étape 3 : Construire et Lancer
+### Étape 2 : Lancer
 
 ```bash
-# Construire l'image
 sudo docker build -t andorya-dashboard .
-
-# Lancer le conteneur (Port 8080 par exemple)
 sudo docker run -d -p 8080:80 --name andorya andorya-dashboard
 ```
 
-Le dashboard sera accessible sur `http://votre-ip:8080`.
-
----
-
-## 🔐 Sécurisation (HTTPS avec Certbot)
-
-Pour la méthode Nginx, il est fortement recommandé d'activer le HTTPS.
-
-```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d votre-domaine.com
-```
-
-Suivez les instructions à l'écran pour rediriger automatiquement le trafic HTTP vers HTTPS.
+Accès : `http://votre-ip:8080`
 
 ---
 
 ## 👤 Accès et Identifiants
 
-Une fois l'installation terminée, accédez simplement à l'adresse IP de votre serveur (`http://votre-ip`). L'application affichera automatiquement l'écran de connexion.
+Accédez à `http://votre-ip` (ou port 8080).
 
-**Identifiants par défaut :**
-
-| Rôle | Nom d'utilisateur | Mot de passe |
+| Rôle | Utilisateur | Mot de passe |
 | :--- | :--- | :--- |
-| **Administrateur** | `admin` | `admin` |
-| **Visiteur (Lecture Seule)** | `viewer` | `view` |
+| **Admin** | `admin` | `admin` |
+| **Viewer** | `viewer` | `view` |
 
-> **Note :** Il est fortement recommandé de changer ces mots de passe une fois connecté via l'onglet "Users".
+---
+
+## ✅ Vérification Finale : Est-ce que tout fonctionne ?
+
+Une fois l'installation terminée, voici la **check-list** pour valider le déploiement :
+
+1.  **Test du Backend** :
+    Sur le serveur, lancez : `curl http://localhost:3001/api/stats`
+    *   *Succès* : Vous recevez un JSON avec `{cpu: ..., memory: ...}`.
+    *   *Échec* : Vérifiez que `server.js` tourne (`pm2 status`) et que le port 3001 est libre.
+
+2.  **Test de l'Affichage** :
+    Connectez-vous au dashboard.
+    *   *Succès* : Vous voyez vos conteneurs actuels et les graphiques bougent.
+    *   *Échec (Bannière Orange)* : Si vous voyez "Backend Unreachable", c'est que le navigateur n'arrive pas à joindre `http://localhost:3001`.
+    *   **Note Importante** : Si vous accédez au dashboard depuis un autre PC, le frontend va chercher `localhost`. Vous devez modifier `App.tsx` avant le build pour remplacer `http://localhost:3001` par `http://IP-DU-SERVEUR:3001`, ou configurer un Proxy Nginx.
+
+3.  **Test de l'IA (Gemini)** :
+    Cliquez sur un conteneur -> Logs -> "Analyze with AI".
+    *   *Succès* : Une analyse s'affiche à droite.
+    *   *Échec* : Vérifiez votre clé API dans le `.env` ou le Dockerfile.

@@ -14,10 +14,10 @@ import { UserList } from './components/UserList'; // Import UserList
 import { UserModal } from './components/UserModal'; // Import UserModal
 import { Toast } from './components/Toast';
 import { ConfirmationModal } from './components/ConfirmationModal';
-import { Server, Box, Cpu, Activity, Search, Sparkles, Shield, Eye, EyeOff, Lock, PlusCircle, Filter, PieChart as PieChartIcon, RefreshCw, ArrowUp, ArrowDown, ArrowUpDown, ArrowLeft, KeyRound, Users, Database, Wifi, WifiOff } from 'lucide-react';
+import { Server, Box, Cpu, Activity, Search, Sparkles, Shield, Eye, EyeOff, Lock, PlusCircle, Filter, PieChart as PieChartIcon, RefreshCw, ArrowUp, ArrowDown, ArrowUpDown, ArrowLeft, KeyRound, Users, WifiOff } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
 
-// --- Mock Data Constants ---
+// --- Mock Data Constants for Auth Only ---
 const INITIAL_USERS: User[] = [
     { 
         id: '1', 
@@ -35,189 +35,6 @@ const INITIAL_USERS: User[] = [
         password: 'view',
         created: '2023-03-10T14:30:00Z'
     }
-];
-
-const INITIAL_CONTAINERS: Container[] = [
-  { 
-    id: 'c1d2e3f4g5h6', 
-    name: 'web-server-nginx', 
-    image: 'nginx:latest', 
-    status: ContainerStatus.RUNNING, 
-    health: 'healthy',
-    created: '2023-10-25T08:00:00Z',
-    uptime: '2 days', 
-    port: '80:80', 
-    cpu: 1.2, 
-    cpuLimit: 50,
-    memory: 45, 
-    memoryLimit: 512,
-    logs: ['[info] Starting nginx...', '[info] Listening on 80', '[info] Request from 192.168.1.5', '[info] Request from 10.0.0.2'],
-    envVars: {
-      "NGINX_HOST": "localhost",
-      "NGINX_PORT": "80",
-      "TZ": "UTC"
-    },
-    volumes: [
-      { hostPath: "/var/www/html", mountPath: "/usr/share/nginx/html", mode: "ro" },
-      { hostPath: "/etc/nginx/conf.d", mountPath: "/etc/nginx/conf.d", mode: "rw" }
-    ],
-    restartPolicy: 'always'
-  },
-  { 
-    id: 'a1b2c3d4e5f6', 
-    name: 'api-gateway', 
-    image: 'node:18-alpine', 
-    status: ContainerStatus.RUNNING, 
-    health: 'healthy',
-    created: '2023-10-27T10:30:00Z',
-    uptime: '5 hours', 
-    port: '3000:3000', 
-    cpu: 12.5, 
-    cpuLimit: 100,
-    memory: 120, 
-    memoryLimit: 1024,
-    logs: ['Server started on 3000', 'Connected to DB', 'Handling GET /api/v1/users', 'Auth successful'],
-    envVars: {
-      "NODE_ENV": "production",
-      "DB_HOST": "postgres-db",
-      "JWT_SECRET": "super-secret-key-change-me"
-    },
-    volumes: [
-      { hostPath: "/usr/src/app/logs", mountPath: "/logs", mode: "rw" }
-    ],
-    restartPolicy: 'on-failure'
-  },
-  { 
-    id: 'z9y8x7w6v5u4', 
-    name: 'postgres-db', 
-    image: 'postgres:14', 
-    status: ContainerStatus.RUNNING, 
-    health: 'starting',
-    created: '2023-10-20T14:15:00Z',
-    uptime: '1 week', 
-    port: '5432:5432', 
-    cpu: 5.8, 
-    cpuLimit: 200,
-    memory: 450, 
-    memoryLimit: 2048,
-    logs: ['DB system is ready to accept connections', 'Vacuum completed'],
-    envVars: {
-      "POSTGRES_USER": "admin",
-      "POSTGRES_PASSWORD": "password123",
-      "POSTGRES_DB": "main_db"
-    },
-    volumes: [
-      { hostPath: "pg_data", mountPath: "/var/lib/postgresql/data", mode: "rw" }
-    ],
-    restartPolicy: 'always'
-  },
-  { 
-    id: 'x1x2x3x4x5x6', 
-    name: 'worker-queue', 
-    image: 'python:3.9', 
-    status: ContainerStatus.ERROR, 
-    health: 'unhealthy',
-    created: '2023-10-27T15:00:00Z',
-    uptime: '10 mins', 
-    port: '-', 
-    cpu: 0, 
-    cpuLimit: 100,
-    memory: 0, 
-    memoryLimit: 512,
-    logs: ['Starting worker...', 'Error: Connection refused to Redis', 'Retrying...', 'Critical Exception: Max retries exceeded', 'Process exited with code 1'],
-    envVars: {
-      "REDIS_URL": "redis://localhost:6379",
-      "QUEUE_NAME": "high-priority"
-    },
-    volumes: [],
-    restartPolicy: 'no'
-  },
-  { 
-    id: 'r4d1s5cache99', 
-    name: 'redis-cache', 
-    image: 'redis:alpine', 
-    status: ContainerStatus.RUNNING, 
-    health: 'healthy',
-    created: '2023-10-24T09:00:00Z',
-    uptime: '3 days', 
-    port: '6379:6379', 
-    cpu: 0.8, 
-    cpuLimit: 50,
-    memory: 25, 
-    memoryLimit: 256,
-    logs: ['Ready to accept connections', 'Background saving started', 'DB saved on disk'],
-    envVars: {},
-    volumes: [],
-    restartPolicy: 'unless-stopped'
-  },
-  { 
-    id: 'm0ng0db77889', 
-    name: 'mongo-store', 
-    image: 'mongo:5.0', 
-    status: ContainerStatus.STOPPED, 
-    health: 'none',
-    created: '2023-10-10T11:20:00Z',
-    uptime: '2 weeks', 
-    port: '27017:27017', 
-    cpu: 0, 
-    cpuLimit: 200,
-    memory: 0, 
-    memoryLimit: 1024,
-    logs: [' shutting down...', 'shutdown complete'],
-    envVars: {},
-    volumes: [{ hostPath: "mongo_data", mountPath: "/data/db", mode: "rw" }],
-    restartPolicy: 'always'
-  },
-  { 
-    id: 'k8s99metrics00', 
-    name: 'metrics-collector', 
-    image: 'prom/prometheus', 
-    status: ContainerStatus.RUNNING, 
-    health: 'healthy',
-    created: '2023-10-27T11:30:00Z',
-    uptime: '4 hours', 
-    port: '9090:9090', 
-    cpu: 3.4, 
-    cpuLimit: 100,
-    memory: 180, 
-    memoryLimit: 1024,
-    logs: ['Server is ready to receive web requests.'],
-    envVars: {},
-    volumes: [],
-    restartPolicy: 'always'
-  },
-  { 
-    id: 'graf55ana443', 
-    name: 'grafana-ui', 
-    image: 'grafana/grafana', 
-    status: ContainerStatus.RUNNING, 
-    health: 'healthy',
-    created: '2023-10-27T11:30:00Z',
-    uptime: '4 hours', 
-    port: '3001:3000', 
-    cpu: 1.5, 
-    cpuLimit: 100,
-    memory: 160, 
-    memoryLimit: 512,
-    logs: ['HTTP Server Listen'],
-    envVars: {},
-    volumes: [],
-    restartPolicy: 'always'
-  }
-];
-
-const INITIAL_IMAGES: DockerImage[] = [
-    { id: 'sha256:7f553e89', repository: 'nginx', tag: 'latest', size: '142MB', created: '3 weeks ago' },
-    { id: 'sha256:8a12b3c4', repository: 'node', tag: '18-alpine', size: '176MB', created: '2 days ago' },
-    { id: 'sha256:9c45d6e7', repository: 'postgres', tag: '14', size: '350MB', created: '1 month ago' },
-    { id: 'sha256:1f2e3d4c', repository: 'python', tag: '3.9', size: '890MB', created: '5 days ago' },
-    { id: 'sha256:5g6h7i8j', repository: 'redis', tag: 'alpine', size: '32MB', created: '2 months ago' },
-];
-
-const INITIAL_VOLUMES: DockerVolume[] = [
-    { name: 'pg_data', driver: 'local', mountpoint: '/var/lib/docker/volumes/pg_data/_data', created: '1 week ago', status: 'in-use' },
-    { name: 'logs_vol', driver: 'local', mountpoint: '/var/lib/docker/volumes/logs_vol/_data', created: '5 hours ago', status: 'in-use' },
-    { name: 'unused_config', driver: 'local', mountpoint: '/var/lib/docker/volumes/unused_config/_data', created: '3 months ago', status: 'available' },
 ];
 
 // --- Inline Login Component ---
@@ -367,12 +184,12 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [activeView, setActiveView] = useState<View>('dashboard');
   
-  // Data State
+  // Data State - Initialize empty, no mock data
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
-  const [containers, setContainers] = useState<Container[]>(INITIAL_CONTAINERS);
-  const [images, setImages] = useState<DockerImage[]>(INITIAL_IMAGES);
-  const [volumes, setVolumes] = useState<DockerVolume[]>(INITIAL_VOLUMES);
-  const [isLiveMode, setIsLiveMode] = useState(false);
+  const [containers, setContainers] = useState<Container[]>([]);
+  const [images, setImages] = useState<DockerImage[]>([]);
+  const [volumes, setVolumes] = useState<DockerVolume[]>([]);
+  const [connectionError, setConnectionError] = useState(false);
 
   // UI State
   const [selectedLogsContainerId, setSelectedLogsContainerId] = useState<string | null>(null); 
@@ -397,10 +214,10 @@ export default function App() {
   // Confirmation State
   const [confirmation, setConfirmation] = useState<{
     isOpen: boolean;
-    targetId: string | null; // Renamed from containerId to be generic
+    targetId: string | null; 
     action: 'start' | 'stop' | 'restart' | 'delete' | null;
-    targetName: string; // Renamed from containerName
-    targetType: 'container' | 'user'; // Added type
+    targetName: string; 
+    targetType: 'container' | 'user'; 
   }>({ isOpen: false, targetId: null, action: null, targetName: '', targetType: 'container' });
 
   // --- Helpers ---
@@ -427,15 +244,15 @@ export default function App() {
               name: c.Names ? c.Names[0].replace('/', '') : 'unknown',
               image: c.Image,
               status: status,
-              health: status === ContainerStatus.RUNNING ? 'healthy' : 'none', // Mock health based on status for now
+              health: status === ContainerStatus.RUNNING ? 'healthy' : 'none',
               created: new Date(c.Created * 1000).toISOString(),
               uptime: c.Status,
               port: c.Ports && c.Ports.length > 0 ? `${c.Ports[0].PublicPort}:${c.Ports[0].PrivatePort}` : '-',
-              cpu: 0, // Will be updated by separate stats call or simulation for now
+              cpu: 0, // Backend typically needs stream for this, using 0 default
               cpuLimit: 100,
-              memory: 0, // Will be updated
+              memory: 0, 
               memoryLimit: 1024,
-              logs: [], // Backend usually needs separate call for logs
+              logs: [], 
               envVars: {},
               volumes: c.Mounts ? c.Mounts.map((m: any) => ({ hostPath: m.Source, mountPath: m.Destination, mode: m.Mode })) : [],
               restartPolicy: 'no'
@@ -443,16 +260,13 @@ export default function App() {
       });
   };
 
-  // Fetch Data and Simulate Real-time Metrics
-  useEffect(() => {
-    if (!user || activeView !== 'dashboard') return;
-
-    const fetchSystemData = async () => {
+  // Fetch Data - NO SIMULATION FALLBACK
+  const fetchSystemData = async () => {
         try {
             // Attempt to fetch from local backend (port 3001 as per README)
             const [containersRes, statsRes] = await Promise.all([
-                fetch('http://localhost:3001/api/containers', { signal: AbortSignal.timeout(1000) }),
-                fetch('http://localhost:3001/api/stats', { signal: AbortSignal.timeout(1000) })
+                fetch('http://localhost:3001/api/containers', { signal: AbortSignal.timeout(2000) }),
+                fetch('http://localhost:3001/api/stats', { signal: AbortSignal.timeout(2000) })
             ]);
 
             if (containersRes.ok && statsRes.ok) {
@@ -461,29 +275,14 @@ export default function App() {
                 
                 const mappedContainers = mapBackendToFrontend(rawContainers);
                 
-                // Since raw container list doesn't usually have realtime CPU/MEM, we might still need to mock individual container loads 
-                // unless the backend provides detailed stats per container.
-                // For this demo, if we get the list, we enter Live Mode.
-                setIsLiveMode(true);
-                
-                // If we are in live mode, we use the container list from server, but might still need to simulate individual CPU fluctuation
-                // if the API doesn't provide it per container.
-                setContainers(prev => {
-                    // Merge fetched list with existing state to preserve simulated metrics if needed
-                    return mappedContainers.map(mc => {
-                         const existing = prev.find(p => p.id === mc.id);
-                         // Simulate fluctuation on the live data
-                         const newCpu = existing ? Math.max(0, Math.min(100, existing.cpu + (Math.random() * 4 - 2))) : Math.random() * 5;
-                         const newMem = existing ? Math.max(10, Math.min(1024, existing.memory + (Math.random() * 20 - 10))) : Math.random() * 100;
-                         
-                         return { ...mc, cpu: newCpu, memory: Math.floor(newMem) };
-                    });
-                });
+                // We now rely on backend data primarily.
+                setContainers(mappedContainers);
+                setConnectionError(false);
 
                 const now = new Date();
                 const timeStr = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
                 
-                // Use real system stats if available, otherwise sum up containers
+                // Use real system stats 
                 const totalCpu = systemStats.cpu || 0;
                 const totalMem = (systemStats.memory / 1024 / 1024) || 0; // Convert bytes to MB
 
@@ -496,58 +295,23 @@ export default function App() {
                     if (newMetrics.length > 20) return newMetrics.slice(1);
                     return newMetrics;
                 });
-
-                return; // Exit, do not run simulation fallback
+            } else {
+                throw new Error("API Error");
             }
         } catch (error) {
-            // Fallback to simulation
-            setIsLiveMode(false);
+            setConnectionError(true);
+            // No simulation fallback. App will show empty or stale state if backend is down.
+            console.warn("Backend unreachable. Ensure server.js is running on port 3001.");
         }
-
-        // --- FALLBACK SIMULATION LOGIC ---
-        const generateData = () => {
-            const now = new Date();
-            const timeStr = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
-            const totalCpu = containers.filter(c => c.status === ContainerStatus.RUNNING).reduce((acc, c) => acc + c.cpu, 0);
-            const totalMem = containers.filter(c => c.status === ContainerStatus.RUNNING).reduce((acc, c) => acc + c.memory, 0);
-            
-            // Simulate health check variations
-            setContainers(prev => prev.map(c => {
-                if (c.status === ContainerStatus.RUNNING) {
-                    // 2% chance to change health status for simulation
-                    const randomHealthCheck = Math.random();
-                    let newHealth: HealthStatus = c.health;
-
-                    if (randomHealthCheck > 0.98) newHealth = 'unhealthy';
-                    else if (randomHealthCheck > 0.96) newHealth = 'starting';
-                    else if (randomHealthCheck < 0.90 && c.health !== 'healthy') newHealth = 'healthy'; // Recovery
-
-                    // Small variation in resource usage, capped by limits
-                    const newCpu = Math.max(0, Math.min(c.cpuLimit, c.cpu + (Math.random() * 4 - 2)));
-                    const newMem = Math.max(10, Math.min(c.memoryLimit, c.memory + (Math.random() * 20 - 10)));
-
-                    return { ...c, cpu: newCpu, memory: Math.floor(newMem), health: newHealth };
-                }
-                return { ...c, cpu: 0, memory: 0, health: 'none' };
-            }));
-
-            setMetrics(prev => {
-                const newMetrics = [...prev, { 
-                    time: timeStr, 
-                    value: totalCpu + (Math.random() * 5 - 2.5),
-                    value2: totalMem + (Math.random() * 10 - 5)
-                }];
-                if (newMetrics.length > 20) return newMetrics.slice(1);
-                return newMetrics;
-            });
-        };
-
-        generateData();
     };
 
+  useEffect(() => {
+    if (!user || activeView !== 'dashboard') return;
+    
+    fetchSystemData();
     const interval = setInterval(fetchSystemData, 2000);
     return () => clearInterval(interval);
-  }, [user, activeView, containers.length]); // Add dependency to allow refreshing container list effect
+  }, [user, activeView]);
 
   const handleLogin = (authenticatedUser: User) => {
       setUser(authenticatedUser);
@@ -560,35 +324,20 @@ export default function App() {
 
   const handleRefresh = () => {
     setIsRefreshing(true);
-    setTimeout(() => {
-      if (!isLiveMode) {
-          // Mock Refresh
-          setContainers(prev => prev.map(c => {
-             if(c.status === ContainerStatus.RUNNING) {
-                 return {
-                     ...c,
-                     cpu: Number((Math.random() * c.cpuLimit * 0.5).toFixed(1)),
-                     memory: Math.floor(Math.random() * (c.memoryLimit * 0.8) + 50),
-                     health: Math.random() > 0.9 ? 'starting' : 'healthy'
-                 };
-             }
-             return c;
-          }));
-      } else {
-          // In live mode, the interval will pick it up, but we can force a quick visual feedback
-      }
-      addNotification('Dashboard data refreshed', 'success');
-      setIsRefreshing(false);
-    }, 800);
+    fetchSystemData().then(() => {
+        addNotification('Dashboard data refreshed', 'success');
+        setIsRefreshing(false);
+    });
   };
 
+  // Note: These handlers update local state optimistically. 
+  // In a full implementation, they should POST to the backend.
   const handleContainerAction = (id: string, action: 'start' | 'stop' | 'restart' | 'delete') => {
     if (user?.role !== 'admin') return;
 
     const targetContainer = containers.find(c => c.id === id);
     if (!targetContainer) return;
 
-    // Open Confirmation Modal instead of acting immediately
     setConfirmation({
       isOpen: true,
       targetId: id,
@@ -605,7 +354,6 @@ export default function App() {
     const timestamp = new Date().toISOString();
     const username = user?.username || 'System';
 
-    // --- User Deletion Logic ---
     if (targetType === 'user' && action === 'delete') {
         setIsProcessingAction(true);
         setTimeout(() => {
@@ -617,11 +365,10 @@ export default function App() {
         return;
     }
 
-    // --- Container Action Logic ---
     if (targetType === 'container') {
+        // Optimistic update - in real app, call API here
         if (action === 'delete') {
             setIsProcessingAction(true);
-            // Simulate API delay for deletion
             setTimeout(() => {
                 setContainers(prev => prev.filter(c => c.id !== targetId));
                 if (selectedDetailsContainerId === targetId) {
@@ -630,7 +377,7 @@ export default function App() {
                 addNotification(`Container ${targetName} deleted successfully`, 'success');
                 setIsProcessingAction(false);
                 setConfirmation({ ...confirmation, isOpen: false });
-            }, 2500); // 2.5s delay for visual feedback
+            }, 2500); 
             return;
         }
 
@@ -640,27 +387,20 @@ export default function App() {
             let newLogs = [...c.logs];
             let newHealth = c.health;
 
-            // Audit Log Entry
             newLogs.push(`[audit] Action '${action.toUpperCase()}' initiated by user '${username}' at ${timestamp}`);
 
             if (action === 'stop') {
                 newStatus = ContainerStatus.STOPPED;
                 newHealth = 'none';
-                newLogs.push(`[info] Stopping container...`, `[info] Process exited 0`);
-                return { ...c, status: newStatus, health: newHealth, cpu: 0, memory: 0, logs: newLogs };
             }
             if (action === 'start') {
                 newStatus = ContainerStatus.RUNNING;
-                newHealth = 'starting';
-                newLogs.push(`[info] Container started.`);
-                return { ...c, status: newStatus, health: newHealth, cpu: Math.random() * 10, memory: Math.random() * 100 + 50, logs: newLogs };
+                newHealth = 'healthy';
             }
             if (action === 'restart') {
-                newHealth = 'starting';
-                newLogs.push(`[warn] Restart signal received`, `[info] Restarting...`);
-                return { ...c, health: newHealth, logs: newLogs }; 
+                newHealth = 'healthy';
             }
-            return c;
+            return { ...c, status: newStatus, health: newHealth, logs: newLogs };
         }));
 
         addNotification(`Container ${targetName} ${action}ed successfully`, 'success');
@@ -669,44 +409,27 @@ export default function App() {
   };
 
   const handleCreateContainer = (containerData: Partial<Container>) => {
-    const newId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const newId = Math.random().toString(36).substring(2, 15);
     const timestamp = new Date().toISOString();
     const username = user?.username || 'System';
     
-    // Check if the image exists in our list, if not add it
-    const existingImage = images.find(img => `${img.repository}:${img.tag}` === containerData.image);
-    if (!existingImage && containerData.image) {
-        const [repo, tag] = containerData.image.includes(':') ? containerData.image.split(':') : [containerData.image, 'latest'];
-        const newImage: DockerImage = {
-            id: `sha256:${Math.random().toString(16).substring(2, 10)}`,
-            repository: repo,
-            tag: tag,
-            size: '0MB', // Mock
-            created: 'Just now'
-        };
-        setImages(prev => [...prev, newImage]);
-    }
-
+    // Optimistic creation
     const newContainer: Container = {
         id: newId,
         name: containerData.name || 'unnamed',
         image: containerData.image || 'unknown',
         status: ContainerStatus.RUNNING,
-        health: 'starting', // Initial health
+        health: 'healthy', 
         created: timestamp,
         uptime: 'Just now',
         port: containerData.port || '-',
-        cpu: 0.5,
+        cpu: 0,
         cpuLimit: containerData.cpuLimit || 100,
-        memory: 30,
+        memory: 0,
         memoryLimit: containerData.memoryLimit || 512,
         logs: [
             `[audit] Container created by user '${username}' at ${timestamp}`,
             `[info] Container created at ${timestamp}`, 
-            `[info] Starting application...`, 
-            `[info] Listening on ${containerData.port || 'default port'}`,
-            `[info] Restart Policy: ${containerData.restartPolicy || 'no'}`,
-            `[info] Resource Limits: CPU=${containerData.cpuLimit}%, MEM=${containerData.memoryLimit}MB`
         ],
         envVars: containerData.envVars || {},
         volumes: containerData.volumes || [],
@@ -725,24 +448,17 @@ export default function App() {
   const handlePullImage = (imageInput: string) => {
      const [repo, tag] = imageInput.includes(':') ? imageInput.split(':') : [imageInput, 'latest'];
      
-     // Check if already exists
      const exists = images.some(img => img.repository === repo && img.tag === tag);
      if (exists) {
          addNotification(`Image ${repo}:${tag} is already up to date`, 'info');
          return;
      }
 
-     // Mock size based on common images
-     let sizeMb = Math.floor(Math.random() * 500 + 50);
-     if (repo.includes('alpine')) sizeMb = Math.floor(Math.random() * 10 + 5);
-     else if (repo.includes('ubuntu') || repo.includes('debian')) sizeMb = Math.floor(Math.random() * 50 + 30);
-     else if (repo.includes('node') || repo.includes('python')) sizeMb = Math.floor(Math.random() * 300 + 100);
-
      const newImage: DockerImage = {
          id: `sha256:${Math.random().toString(16).substring(2, 10)}`,
          repository: repo,
          tag: tag,
-         size: `${sizeMb}MB`,
+         size: `0MB`,
          created: 'Just now'
      };
 
@@ -760,7 +476,6 @@ export default function App() {
       addNotification('Volume removed successfully', 'info');
   };
 
-  // --- User Management Handlers ---
   const handleAddUser = (userData: Partial<User>) => {
       const newUser: User = {
           id: Math.random().toString(36).substring(2, 10),
@@ -778,7 +493,6 @@ export default function App() {
       setUsers(prev => prev.map(u => {
           if (u.id === userData.id) {
               const updated = { ...u, ...userData };
-              // If password was blank in update, keep old one
               if (!userData.password) updated.password = u.password;
               return updated;
           }
@@ -795,7 +509,6 @@ export default function App() {
       const targetUser = users.find(u => u.id === id);
       if (!targetUser) return;
 
-      // Trigger confirmation modal
       setConfirmation({
           isOpen: true,
           targetId: id,
@@ -815,30 +528,18 @@ export default function App() {
     })
     .sort((a, b) => {
         let comparison = 0;
-        
         switch (sortField) {
-            case 'cpu':
-                comparison = a.cpu - b.cpu;
-                break;
-            case 'memory':
-                comparison = a.memory - b.memory;
-                break;
-            case 'uptime':
-                comparison = parseUptime(a.uptime) - parseUptime(b.uptime);
-                break;
-            case 'name':
-            default:
-                comparison = a.name.localeCompare(b.name);
-                break;
+            case 'cpu': comparison = a.cpu - b.cpu; break;
+            case 'memory': comparison = a.memory - b.memory; break;
+            case 'uptime': comparison = parseUptime(a.uptime) - parseUptime(b.uptime); break;
+            case 'name': default: comparison = a.name.localeCompare(b.name); break;
         }
-
         return sortDirection === 'asc' ? comparison : -comparison;
     });
 
   const activeCount = containers.filter(c => c.status === ContainerStatus.RUNNING).length;
   const errorCount = containers.filter(c => c.status === ContainerStatus.ERROR).length;
   
-  // Pie Chart Data
   const statusData = [
       { name: 'Running', value: activeCount, color: PIE_COLORS[ContainerStatus.RUNNING] },
       { name: 'Stopped', value: containers.filter(c => c.status === ContainerStatus.STOPPED).length, color: PIE_COLORS[ContainerStatus.STOPPED] },
@@ -914,29 +615,6 @@ export default function App() {
                     </div>
                     <p className="text-xs text-indigo-400/80">AI analysis available for container logs.</p>
                 </div>
-                
-                {/* Connection Mode Indicator */}
-                {isLiveMode ? (
-                    <div className="bg-emerald-900/30 p-3 rounded-xl border border-emerald-500/30">
-                        <div className="flex items-center gap-2 text-emerald-400 mb-1">
-                            <Wifi size={14} />
-                            <span className="text-[10px] font-bold uppercase tracking-wider">Live Connection</span>
-                        </div>
-                        <p className="text-[10px] text-emerald-200/70 leading-tight">
-                            Connected to Docker Server backend.
-                        </p>
-                    </div>
-                ) : (
-                    <div className="bg-amber-900/30 p-3 rounded-xl border border-amber-500/30">
-                        <div className="flex items-center gap-2 text-amber-400 mb-1">
-                            <WifiOff size={14} />
-                            <span className="text-[10px] font-bold uppercase tracking-wider">Simulation Mode</span>
-                        </div>
-                        <p className="text-[10px] text-amber-200/70 leading-tight">
-                            Using mock data. Backend offline.
-                        </p>
-                    </div>
-                )}
             </div>
         </aside>
 
@@ -956,12 +634,26 @@ export default function App() {
             <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto custom-scrollbar">
                 <div className="max-w-7xl mx-auto">
                     
+                    {/* Connection Error Banner */}
+                    {connectionError && activeView === 'dashboard' && (
+                         <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-6 flex items-start gap-3 text-amber-200 animate-fade-in">
+                            <WifiOff className="shrink-0 mt-0.5" size={20} />
+                            <div>
+                                <h4 className="font-bold">Backend Unreachable</h4>
+                                <p className="text-sm opacity-80 mt-1">
+                                    Could not connect to Docker backend API at <code className="bg-amber-900/30 px-1 rounded text-xs">http://localhost:3001</code>. 
+                                    Dashboard data may be empty. Please check the README for server installation instructions.
+                                </p>
+                            </div>
+                         </div>
+                    )}
+
                     {activeView === 'dashboard' && (
                         <div className="space-y-8 animate-fade-in">
                             {/* Stats Grid */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <StatsCard title="Active Containers" value={activeCount} subtitle="+2 from yesterday" icon={Box} color="blue" />
-                                <StatsCard title="Total CPU Load" value={`${containers.filter(c => c.status === 'RUNNING').reduce((a,c)=>a+c.cpu,0).toFixed(1)}%`} subtitle="Average usage" icon={Cpu} color="purple" />
+                                <StatsCard title="Active Containers" value={activeCount} subtitle="Real-time" icon={Box} color="blue" />
+                                <StatsCard title="Total CPU Load" value={`${containers.filter(c => c.status === 'RUNNING').reduce((a,c)=>a+c.cpu,0).toFixed(1)}%`} subtitle="System Usage" icon={Cpu} color="purple" />
                                 <StatsCard title="Total Memory" value={`${(containers.filter(c => c.status === 'RUNNING').reduce((a,c)=>a+c.memory,0) / 1024).toFixed(1)} GB`} subtitle="Allocated RAM" icon={Activity} color="green" />
                                 <StatsCard title="System Issues" value={errorCount} subtitle={errorCount > 0 ? "Requires Attention" : "All systems operational"} icon={Server} color="red" />
                             </div>
@@ -1146,8 +838,8 @@ export default function App() {
                                     ) : (
                                         <div className="flex flex-col items-center justify-center py-16 text-slate-500">
                                             <Box size={48} className="opacity-20 mb-4" />
-                                            <p>No containers found matching your criteria.</p>
-                                            {(searchQuery || statusFilter !== 'ALL') && (
+                                            <p>{connectionError ? "Waiting for backend connection..." : "No containers found."}</p>
+                                            {(searchQuery || statusFilter !== 'ALL') && !connectionError && (
                                                 <button 
                                                     onClick={() => {setSearchQuery(''); setStatusFilter('ALL')}}
                                                     className="mt-2 text-blue-400 hover:text-blue-300 text-sm"
