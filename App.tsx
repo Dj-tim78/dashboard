@@ -14,7 +14,7 @@ import { UserList } from './components/UserList'; // Import UserList
 import { UserModal } from './components/UserModal'; // Import UserModal
 import { Toast } from './components/Toast';
 import { ConfirmationModal } from './components/ConfirmationModal';
-import { Server, Box, Cpu, Activity, Search, Sparkles, Shield, Eye, Lock, PlusCircle, Filter, PieChart as PieChartIcon, RefreshCw, ArrowUp, ArrowDown, ArrowUpDown, ArrowLeft, KeyRound, Users } from 'lucide-react';
+import { Server, Box, Cpu, Activity, Search, Sparkles, Shield, Eye, EyeOff, Lock, PlusCircle, Filter, PieChart as PieChartIcon, RefreshCw, ArrowUp, ArrowDown, ArrowUpDown, ArrowLeft, KeyRound, Users, Database } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
 
 // --- Mock Data Constants ---
@@ -225,6 +225,7 @@ const LoginComponent: React.FC<{ onLogin: (user: User) => void, users: User[] }>
     const [view, setView] = useState<'select' | 'password'>('select');
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
 
     const handleUserSelect = (user: User) => {
@@ -232,6 +233,7 @@ const LoginComponent: React.FC<{ onLogin: (user: User) => void, users: User[] }>
         setView('password');
         setError('');
         setPassword('');
+        setShowPassword(false);
     }
 
     const handleLoginSubmit = (e: React.FormEvent) => {
@@ -297,13 +299,21 @@ const LoginComponent: React.FC<{ onLogin: (user: User) => void, users: User[] }>
                             <div className="relative">
                                 <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                                 <input 
-                                    type="password" 
+                                    type={showPassword ? "text" : "password"} 
                                     value={password}
                                     onChange={(e) => { setPassword(e.target.value); setError(''); }}
-                                    className="w-full bg-slate-900 border border-slate-600 rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    className="w-full bg-slate-900 border border-slate-600 rounded-xl pl-10 pr-12 py-3 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                     placeholder="Enter password"
                                     autoFocus
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors p-1"
+                                    tabIndex={-1}
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
                             </div>
                             {error && (
                                 <p className="text-rose-400 text-sm mt-2 flex items-center gap-1">
@@ -802,12 +812,23 @@ export default function App() {
             </nav>
 
             <div className="absolute bottom-0 w-full p-6 border-t border-slate-800">
-                <div className="bg-gradient-to-br from-indigo-900 to-slate-900 p-4 rounded-xl border border-indigo-500/30">
+                <div className="bg-gradient-to-br from-indigo-900 to-slate-900 p-4 rounded-xl border border-indigo-500/30 mb-4">
                     <div className="flex items-center gap-2 text-indigo-300 mb-2">
                         <Sparkles size={16} />
                         <span className="text-xs font-bold uppercase tracking-wider">Gemini AI Active</span>
                     </div>
                     <p className="text-xs text-indigo-400/80">AI analysis available for container logs.</p>
+                </div>
+                
+                {/* Simulation Mode Indicator */}
+                <div className="bg-amber-900/30 p-3 rounded-xl border border-amber-500/30">
+                    <div className="flex items-center gap-2 text-amber-400 mb-1">
+                        <Database size={14} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider">Simulation Mode</span>
+                    </div>
+                    <p className="text-[10px] text-amber-200/70 leading-tight">
+                        Using mock data. Connect backend for real Docker stats.
+                    </p>
                 </div>
             </div>
         </aside>

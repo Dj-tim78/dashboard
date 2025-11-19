@@ -8,6 +8,82 @@ Ce guide détaille les étapes pour déployer **Andorya Dashboard** sur un serve
 *   Un accès **root** ou un utilisateur avec privilèges `sudo`.
 *   Une clé API Google Gemini (pour l'analyse des logs).
 
+## 🔑 Configuration de la Clé API Gemini
+
+Ce dashboard utilise **Google Gemini** pour analyser les logs des conteneurs et proposer des solutions intelligentes. Pour que cette fonctionnalité soit active, vous devez configurer une clé API.
+
+1.  **Obtenir une clé** : Rendez-vous sur [Google AI Studio](https://aistudio.google.com/) pour générer une clé API.
+2.  **Fichier `.env`** : À la racine du projet (pour le développement local ou la méthode classique), créez un fichier nommé `.env`.
+3.  **Définition de la variable** :
+    Ouvrez le fichier et ajoutez la ligne suivante en remplaçant le texte générique par votre véritable clé :
+
+    ```env
+    API_KEY=votre_vraie_clé_api_ici
+    ```
+
+> **⚠️ Sécurité** : Ne partagez jamais votre fichier `.env`. Si vous utilisez Git, assurez-vous que `.env` est listé dans votre fichier `.gitignore` pour éviter de publier votre clé API accidentellement.
+
+---
+
+## ⚠️ IMPORTANT : Mode Simulation vs Vraies Données
+
+**Par défaut, cette application fonctionne en mode "Simulation".**
+C'est une application Frontend (React) qui tourne dans votre navigateur. Pour des raisons de sécurité, elle ne peut pas lire directement votre CPU, votre RAM ou vos conteneurs Docker.
+
+### Comment afficher les VRAIES ressources de mon serveur ?
+
+Pour connecter ce dashboard à votre serveur Linux réel, vous devez créer un petit serveur API (Backend) qui fera le pont entre React et Docker.
+
+Voici le script `server.js` (Node.js) que vous devrez utiliser :
+
+1.  Installez les bibliothèques nécessaires sur votre serveur :
+    ```bash
+    npm install express cors dockerode systeminformation
+    ```
+
+2.  Créez un fichier `server.js` à côté de votre dossier `dist` :
+    ```javascript
+    const express = require('express');
+    const Docker = require('dockerode');
+    const si = require('systeminformation');
+    const cors = require('cors');
+    
+    const app = express();
+    const docker = new Docker({ socketPath: '/var/run/docker.sock' });
+    
+    app.use(cors()); // Autorise le frontend à parler au backend
+    
+    // Endpoint pour les conteneurs
+    app.get('/api/containers', async (req, res) => {
+        try {
+            const containers = await docker.listContainers({ all: true });
+            res.json(containers);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+    
+    // Endpoint pour les métriques système (CPU/RAM)
+    app.get('/api/stats', async (req, res) => {
+        try {
+            const cpu = await si.currentLoad();
+            const mem = await si.mem();
+            res.json({
+                cpu: cpu.currentLoad,
+                memory: mem.active,
+                memoryTotal: mem.total
+            });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+    
+    app.listen(3001, () => console.log('Backend running on port 3001'));
+    ```
+
+3.  Lancez ce serveur avec `node server.js`.
+4.  Modifiez le code React (`App.tsx`) pour faire des `fetch('http://votre-ip:3001/api/containers')` au lieu d'utiliser `INITIAL_CONTAINERS`.
+
 ---
 
 ## 🛠️ Méthode 1 : Installation Classique (Nginx + Node.js)
@@ -55,15 +131,11 @@ sudo npm install
 
 ### Étape 4 : Configuration et Build
 
-Créez un fichier `.env` pour votre configuration :
+Assurez-vous que votre fichier `.env` est créé comme décrit dans la section **Configuration** ci-dessus.
 
 ```bash
 sudo nano .env
-```
-
-Ajoutez votre clé API Gemini :
-```env
-API_KEY=votre_clé_api_google_gemini_ici
+# Collez votre API_KEY=...
 ```
 
 Compilez l'application pour la production :
@@ -146,7 +218,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-# Remplacez par votre clé ou passez-la en ARG
+# Remplacez par votre clé ou passez-la en ARG lors du build
 ENV API_KEY=votre_cle_api_ici 
 RUN npm run build
 
@@ -183,11 +255,3 @@ sudo certbot --nginx -d votre-domaine.com
 ```
 
 Suivez les instructions à l'écran pour rediriger automatiquement le trafic HTTP vers HTTPS.
-
----
-
-## ℹ️ Note Importante
-
-Actuellement, cette version de **Andorya Dashboard** fonctionne en **mode simulation/démo** (les données des conteneurs sont simulées dans le navigateur).
-
-Pour connecter ce dashboard à votre véritable socket Docker (`/var/run/docker.sock`), une API Backend (Node.js/Express ou Go) sera nécessaire pour faire le pont entre ce frontend React et votre système Ubuntu.
