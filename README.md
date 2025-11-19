@@ -120,8 +120,8 @@ Naviguez vers le dossier web et clonez le projet (remplacez l'URL par celle de v
 
 ```bash
 cd /var/www
-sudo git clone https://votre-repo-git/andorya-dashboard.git
-cd andorya-dashboard
+sudo git clone https://github.com/Dj-tim78/dashboard.git
+cd dashboard
 ```
 
 Installez les dépendances :
@@ -159,7 +159,7 @@ server {
     listen 80;
     server_name votre-domaine.com ou_votre_ip;
 
-    root /var/www/andorya-dashboard/dist;
+    root /var/www/dashboard/dist;
     index index.html;
 
     location / {
