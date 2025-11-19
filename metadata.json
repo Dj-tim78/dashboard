@@ -1,0 +1,5 @@
+{
+  "name": "Andorya Dashboard",
+  "description": "A modern, dark-themed Docker container management dashboard featuring real-time metric simulation, role-based access control, and Gemini AI-powered log analysis.",
+  "requestFramePermissions": []
+}
