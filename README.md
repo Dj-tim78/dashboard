@@ -187,8 +187,8 @@ sudo systemctl restart nginx
 Assurez-vous que Nginx peut lire les fichiers :
 
 ```bash
-sudo chown -R www-data:www-data /var/www/andorya-dashboard/dist
-sudo chmod -R 755 /var/www/andorya-dashboard/dist
+sudo chown -R www-data:www-data /var/www/dashboard/dist
+sudo chmod -R 755 /var/www/dashboard/dist
 ```
 
 🎉 **Votre dashboard est accessible sur `http://votre-ip` !**
