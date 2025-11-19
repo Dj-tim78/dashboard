@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { User } from '../types';
-import { X, User as UserIcon, Lock, Shield, Eye, Save, Upload, Check } from 'lucide-react';
+import { X, User as UserIcon, Lock, Shield, Eye, Save, Upload, Check, Image as ImageIcon } from 'lucide-react';
 
 interface UserModalProps {
   isOpen: boolean;
@@ -91,6 +91,8 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSubmit,
     onClose();
   };
 
+  const isCustomAvatar = !AVATAR_OPTIONS.includes(avatar);
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
       <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
@@ -113,17 +115,25 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSubmit,
         <div className="flex flex-col md:flex-row">
             {/* Avatar Selection Side */}
             <div className="p-6 bg-slate-800/30 border-b md:border-b-0 md:border-r border-slate-700 md:w-1/3 flex flex-col items-center">
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-4 w-full text-center">Profile Avatar</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-4 w-full text-center flex items-center justify-center gap-2">
+                  <ImageIcon size={14} /> Profile Avatar
+                </label>
                 
                 {/* Current Avatar Preview */}
-                <div className="relative w-32 h-32 rounded-full border-4 border-slate-700 overflow-hidden mb-6 shadow-lg group">
-                    <img src={avatar} alt="Avatar Preview" className="w-full h-full object-cover" />
-                    <div onClick={() => fileInputRef.current?.click()} className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
-                         <Upload className="text-white" size={24} />
-                    </div>
+                <div className="relative group">
+                  <div className="relative w-32 h-32 rounded-full border-4 border-slate-700 overflow-hidden mb-6 shadow-2xl transition-transform transform group-hover:scale-105 bg-slate-800">
+                      <img src={avatar} alt="Avatar Preview" className="w-full h-full object-cover" />
+                  </div>
+                  <div 
+                    onClick={() => fileInputRef.current?.click()} 
+                    className="absolute bottom-6 right-0 bg-indigo-600 text-white p-2 rounded-full cursor-pointer shadow-lg hover:bg-indigo-500 transition-colors border-2 border-slate-800"
+                    title="Upload Custom Image"
+                  >
+                    <Upload size={16} />
+                  </div>
                 </div>
 
-                {/* Upload Button */}
+                {/* Upload Button (Hidden Input) */}
                 <input 
                     type="file" 
                     ref={fileInputRef} 
@@ -131,26 +141,34 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSubmit,
                     accept="image/*"
                     onChange={handleFileUpload}
                 />
-                <button 
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full py-2 mb-6 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg text-sm text-slate-300 transition-colors flex items-center justify-center gap-2"
-                >
-                    <Upload size={14} /> Upload Custom
-                </button>
+                
+                {isCustomAvatar && (
+                  <div className="mb-6 px-3 py-1.5 bg-indigo-500/20 text-indigo-300 rounded-full text-xs font-bold flex items-center gap-1">
+                    <Check size={12} /> Custom Upload Active
+                  </div>
+                )}
 
                 {/* Presets */}
                 <div className="w-full">
-                    <p className="text-xs text-slate-500 mb-2 text-center">Or choose a preset:</p>
-                    <div className="grid grid-cols-4 gap-2">
+                    <p className="text-xs text-slate-500 mb-3 text-center uppercase font-bold tracking-wider">Select Preset</p>
+                    <div className="grid grid-cols-4 gap-3">
                         {AVATAR_OPTIONS.map((opt, idx) => (
                             <button
                                 key={idx}
                                 type="button"
                                 onClick={() => setAvatar(opt)}
-                                className={`w-full aspect-square rounded-full overflow-hidden border-2 transition-all ${avatar === opt ? 'border-indigo-500 ring-2 ring-indigo-500/30 scale-110' : 'border-transparent hover:border-slate-500'}`}
+                                className={`relative w-full aspect-square rounded-full overflow-hidden transition-all duration-200 group ${
+                                  avatar === opt 
+                                  ? 'ring-2 ring-offset-2 ring-offset-slate-800 ring-indigo-500 scale-100' 
+                                  : 'opacity-70 hover:opacity-100 hover:scale-110'
+                                }`}
                             >
                                 <img src={opt} alt={`Preset ${idx}`} className="w-full h-full object-cover" />
+                                {avatar === opt && (
+                                  <div className="absolute inset-0 bg-indigo-600/40 flex items-center justify-center animate-fade-in backdrop-blur-[1px]">
+                                    <Check className="text-white drop-shadow-md" size={16} strokeWidth={3} />
+                                  </div>
+                                )}
                             </button>
                         ))}
                     </div>
@@ -204,7 +222,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSubmit,
                             onClick={() => setRole('admin')}
                             className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${
                                 role === 'admin' 
-                                ? 'bg-emerald-600/20 border-emerald-500 text-emerald-400' 
+                                ? 'bg-emerald-600/20 border-emerald-500 text-emerald-400 shadow-lg shadow-emerald-900/20' 
                                 : 'bg-slate-800 border-slate-700 text-slate-500 hover:border-slate-600'
                             }`}
                         >
@@ -217,7 +235,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSubmit,
                             onClick={() => setRole('viewer')}
                             className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${
                                 role === 'viewer' 
-                                ? 'bg-purple-600/20 border-purple-500 text-purple-400' 
+                                ? 'bg-purple-600/20 border-purple-500 text-purple-400 shadow-lg shadow-purple-900/20' 
                                 : 'bg-slate-800 border-slate-700 text-slate-500 hover:border-slate-600'
                             }`}
                         >
@@ -228,7 +246,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSubmit,
                     </div>
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-4 mt-auto">
                     <button 
                         type="submit" 
                         className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-900/20 transition-all flex items-center justify-center gap-2"

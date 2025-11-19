@@ -255,3 +255,18 @@ sudo certbot --nginx -d votre-domaine.com
 ```
 
 Suivez les instructions à l'écran pour rediriger automatiquement le trafic HTTP vers HTTPS.
+
+---
+
+## 👤 Accès et Identifiants
+
+Une fois l'installation terminée, accédez simplement à l'adresse IP de votre serveur (`http://votre-ip`). L'application affichera automatiquement l'écran de connexion.
+
+**Identifiants par défaut :**
+
+| Rôle | Nom d'utilisateur | Mot de passe |
+| :--- | :--- | :--- |
+| **Administrateur** | `admin` | `admin` |
+| **Visiteur (Lecture Seule)** | `viewer` | `view` |
+
+> **Note :** Il est fortement recommandé de changer ces mots de passe une fois connecté via l'onglet "Users".

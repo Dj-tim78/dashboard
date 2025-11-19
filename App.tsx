@@ -14,7 +14,7 @@ import { UserList } from './components/UserList'; // Import UserList
 import { UserModal } from './components/UserModal'; // Import UserModal
 import { Toast } from './components/Toast';
 import { ConfirmationModal } from './components/ConfirmationModal';
-import { Server, Box, Cpu, Activity, Search, Sparkles, Shield, Eye, EyeOff, Lock, PlusCircle, Filter, PieChart as PieChartIcon, RefreshCw, ArrowUp, ArrowDown, ArrowUpDown, ArrowLeft, KeyRound, Users, Database } from 'lucide-react';
+import { Server, Box, Cpu, Activity, Search, Sparkles, Shield, Eye, EyeOff, Lock, PlusCircle, Filter, PieChart as PieChartIcon, RefreshCw, ArrowUp, ArrowDown, ArrowUpDown, ArrowLeft, KeyRound, Users, Database, Wifi, WifiOff } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
 
 // --- Mock Data Constants ---
@@ -372,6 +372,7 @@ export default function App() {
   const [containers, setContainers] = useState<Container[]>(INITIAL_CONTAINERS);
   const [images, setImages] = useState<DockerImage[]>(INITIAL_IMAGES);
   const [volumes, setVolumes] = useState<DockerVolume[]>(INITIAL_VOLUMES);
+  const [isLiveMode, setIsLiveMode] = useState(false);
 
   // UI State
   const [selectedLogsContainerId, setSelectedLogsContainerId] = useState<string | null>(null); 
@@ -412,50 +413,141 @@ export default function App() {
       setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
-  // Simulate Real-time Metrics and Health
+  // Map Raw Backend Data to Container Interface
+  const mapBackendToFrontend = (backendData: any[]): Container[] => {
+      return backendData.map((c: any) => {
+          // Determine Status
+          let status = ContainerStatus.STOPPED;
+          if (c.State === 'running') status = ContainerStatus.RUNNING;
+          else if (c.State === 'exited') status = ContainerStatus.EXITED;
+          else if (c.State === 'dead' || c.State === 'restarting') status = ContainerStatus.ERROR;
+
+          return {
+              id: c.Id,
+              name: c.Names ? c.Names[0].replace('/', '') : 'unknown',
+              image: c.Image,
+              status: status,
+              health: status === ContainerStatus.RUNNING ? 'healthy' : 'none', // Mock health based on status for now
+              created: new Date(c.Created * 1000).toISOString(),
+              uptime: c.Status,
+              port: c.Ports && c.Ports.length > 0 ? `${c.Ports[0].PublicPort}:${c.Ports[0].PrivatePort}` : '-',
+              cpu: 0, // Will be updated by separate stats call or simulation for now
+              cpuLimit: 100,
+              memory: 0, // Will be updated
+              memoryLimit: 1024,
+              logs: [], // Backend usually needs separate call for logs
+              envVars: {},
+              volumes: c.Mounts ? c.Mounts.map((m: any) => ({ hostPath: m.Source, mountPath: m.Destination, mode: m.Mode })) : [],
+              restartPolicy: 'no'
+          };
+      });
+  };
+
+  // Fetch Data and Simulate Real-time Metrics
   useEffect(() => {
     if (!user || activeView !== 'dashboard') return;
 
-    const generateData = () => {
-        const now = new Date();
-        const timeStr = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
-        const totalCpu = containers.filter(c => c.status === ContainerStatus.RUNNING).reduce((acc, c) => acc + c.cpu, 0);
-        const totalMem = containers.filter(c => c.status === ContainerStatus.RUNNING).reduce((acc, c) => acc + c.memory, 0);
-        
-        // Simulate health check variations
-        setContainers(prev => prev.map(c => {
-            if (c.status === ContainerStatus.RUNNING) {
-                // 2% chance to change health status for simulation
-                const randomHealthCheck = Math.random();
-                let newHealth: HealthStatus = c.health;
+    const fetchSystemData = async () => {
+        try {
+            // Attempt to fetch from local backend (port 3001 as per README)
+            const [containersRes, statsRes] = await Promise.all([
+                fetch('http://localhost:3001/api/containers', { signal: AbortSignal.timeout(1000) }),
+                fetch('http://localhost:3001/api/stats', { signal: AbortSignal.timeout(1000) })
+            ]);
 
-                if (randomHealthCheck > 0.98) newHealth = 'unhealthy';
-                else if (randomHealthCheck > 0.96) newHealth = 'starting';
-                else if (randomHealthCheck < 0.90 && c.health !== 'healthy') newHealth = 'healthy'; // Recovery
+            if (containersRes.ok && statsRes.ok) {
+                const rawContainers = await containersRes.json();
+                const systemStats = await statsRes.json();
+                
+                const mappedContainers = mapBackendToFrontend(rawContainers);
+                
+                // Since raw container list doesn't usually have realtime CPU/MEM, we might still need to mock individual container loads 
+                // unless the backend provides detailed stats per container.
+                // For this demo, if we get the list, we enter Live Mode.
+                setIsLiveMode(true);
+                
+                // If we are in live mode, we use the container list from server, but might still need to simulate individual CPU fluctuation
+                // if the API doesn't provide it per container.
+                setContainers(prev => {
+                    // Merge fetched list with existing state to preserve simulated metrics if needed
+                    return mappedContainers.map(mc => {
+                         const existing = prev.find(p => p.id === mc.id);
+                         // Simulate fluctuation on the live data
+                         const newCpu = existing ? Math.max(0, Math.min(100, existing.cpu + (Math.random() * 4 - 2))) : Math.random() * 5;
+                         const newMem = existing ? Math.max(10, Math.min(1024, existing.memory + (Math.random() * 20 - 10))) : Math.random() * 100;
+                         
+                         return { ...mc, cpu: newCpu, memory: Math.floor(newMem) };
+                    });
+                });
 
-                // Small variation in resource usage, capped by limits
-                const newCpu = Math.max(0, Math.min(c.cpuLimit, c.cpu + (Math.random() * 4 - 2)));
-                const newMem = Math.max(10, Math.min(c.memoryLimit, c.memory + (Math.random() * 20 - 10)));
+                const now = new Date();
+                const timeStr = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+                
+                // Use real system stats if available, otherwise sum up containers
+                const totalCpu = systemStats.cpu || 0;
+                const totalMem = (systemStats.memory / 1024 / 1024) || 0; // Convert bytes to MB
 
-                return { ...c, cpu: newCpu, memory: Math.floor(newMem), health: newHealth };
+                 setMetrics(prev => {
+                    const newMetrics = [...prev, { 
+                        time: timeStr, 
+                        value: totalCpu,
+                        value2: totalMem
+                    }];
+                    if (newMetrics.length > 20) return newMetrics.slice(1);
+                    return newMetrics;
+                });
+
+                return; // Exit, do not run simulation fallback
             }
-            return { ...c, cpu: 0, memory: 0, health: 'none' };
-        }));
+        } catch (error) {
+            // Fallback to simulation
+            setIsLiveMode(false);
+        }
 
-        setMetrics(prev => {
-            const newMetrics = [...prev, { 
-                time: timeStr, 
-                value: totalCpu + (Math.random() * 5 - 2.5),
-                value2: totalMem + (Math.random() * 10 - 5)
-            }];
-            if (newMetrics.length > 20) return newMetrics.slice(1);
-            return newMetrics;
-        });
+        // --- FALLBACK SIMULATION LOGIC ---
+        const generateData = () => {
+            const now = new Date();
+            const timeStr = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+            const totalCpu = containers.filter(c => c.status === ContainerStatus.RUNNING).reduce((acc, c) => acc + c.cpu, 0);
+            const totalMem = containers.filter(c => c.status === ContainerStatus.RUNNING).reduce((acc, c) => acc + c.memory, 0);
+            
+            // Simulate health check variations
+            setContainers(prev => prev.map(c => {
+                if (c.status === ContainerStatus.RUNNING) {
+                    // 2% chance to change health status for simulation
+                    const randomHealthCheck = Math.random();
+                    let newHealth: HealthStatus = c.health;
+
+                    if (randomHealthCheck > 0.98) newHealth = 'unhealthy';
+                    else if (randomHealthCheck > 0.96) newHealth = 'starting';
+                    else if (randomHealthCheck < 0.90 && c.health !== 'healthy') newHealth = 'healthy'; // Recovery
+
+                    // Small variation in resource usage, capped by limits
+                    const newCpu = Math.max(0, Math.min(c.cpuLimit, c.cpu + (Math.random() * 4 - 2)));
+                    const newMem = Math.max(10, Math.min(c.memoryLimit, c.memory + (Math.random() * 20 - 10)));
+
+                    return { ...c, cpu: newCpu, memory: Math.floor(newMem), health: newHealth };
+                }
+                return { ...c, cpu: 0, memory: 0, health: 'none' };
+            }));
+
+            setMetrics(prev => {
+                const newMetrics = [...prev, { 
+                    time: timeStr, 
+                    value: totalCpu + (Math.random() * 5 - 2.5),
+                    value2: totalMem + (Math.random() * 10 - 5)
+                }];
+                if (newMetrics.length > 20) return newMetrics.slice(1);
+                return newMetrics;
+            });
+        };
+
+        generateData();
     };
 
-    const interval = setInterval(generateData, 2000);
+    const interval = setInterval(fetchSystemData, 2000);
     return () => clearInterval(interval);
-  }, [user, activeView]);
+  }, [user, activeView, containers.length]); // Add dependency to allow refreshing container list effect
 
   const handleLogin = (authenticatedUser: User) => {
       setUser(authenticatedUser);
@@ -468,20 +560,23 @@ export default function App() {
 
   const handleRefresh = () => {
     setIsRefreshing(true);
-    // Simulate network delay and data update
     setTimeout(() => {
-      // Update container metrics to show change
-      setContainers(prev => prev.map(c => {
-         if(c.status === ContainerStatus.RUNNING) {
-             return {
-                 ...c,
-                 cpu: Number((Math.random() * c.cpuLimit * 0.5).toFixed(1)), // Random usage within limit
-                 memory: Math.floor(Math.random() * (c.memoryLimit * 0.8) + 50),
-                 health: Math.random() > 0.9 ? 'starting' : 'healthy'
-             };
-         }
-         return c;
-      }));
+      if (!isLiveMode) {
+          // Mock Refresh
+          setContainers(prev => prev.map(c => {
+             if(c.status === ContainerStatus.RUNNING) {
+                 return {
+                     ...c,
+                     cpu: Number((Math.random() * c.cpuLimit * 0.5).toFixed(1)),
+                     memory: Math.floor(Math.random() * (c.memoryLimit * 0.8) + 50),
+                     health: Math.random() > 0.9 ? 'starting' : 'healthy'
+                 };
+             }
+             return c;
+          }));
+      } else {
+          // In live mode, the interval will pick it up, but we can force a quick visual feedback
+      }
       addNotification('Dashboard data refreshed', 'success');
       setIsRefreshing(false);
     }, 800);
@@ -820,16 +915,28 @@ export default function App() {
                     <p className="text-xs text-indigo-400/80">AI analysis available for container logs.</p>
                 </div>
                 
-                {/* Simulation Mode Indicator */}
-                <div className="bg-amber-900/30 p-3 rounded-xl border border-amber-500/30">
-                    <div className="flex items-center gap-2 text-amber-400 mb-1">
-                        <Database size={14} />
-                        <span className="text-[10px] font-bold uppercase tracking-wider">Simulation Mode</span>
+                {/* Connection Mode Indicator */}
+                {isLiveMode ? (
+                    <div className="bg-emerald-900/30 p-3 rounded-xl border border-emerald-500/30">
+                        <div className="flex items-center gap-2 text-emerald-400 mb-1">
+                            <Wifi size={14} />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Live Connection</span>
+                        </div>
+                        <p className="text-[10px] text-emerald-200/70 leading-tight">
+                            Connected to Docker Server backend.
+                        </p>
                     </div>
-                    <p className="text-[10px] text-amber-200/70 leading-tight">
-                        Using mock data. Connect backend for real Docker stats.
-                    </p>
-                </div>
+                ) : (
+                    <div className="bg-amber-900/30 p-3 rounded-xl border border-amber-500/30">
+                        <div className="flex items-center gap-2 text-amber-400 mb-1">
+                            <WifiOff size={14} />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Simulation Mode</span>
+                        </div>
+                        <p className="text-[10px] text-amber-200/70 leading-tight">
+                            Using mock data. Backend offline.
+                        </p>
+                    </div>
+                )}
             </div>
         </aside>
 
