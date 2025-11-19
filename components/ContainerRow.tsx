@@ -118,12 +118,13 @@ export const ContainerRow: React.FC<ContainerRowProps> = ({ container, onAction,
         <div className="flex items-center gap-4 lg:gap-8 w-full sm:w-auto justify-between sm:justify-end">
             
           {/* Created Date Column (New) - Visible on Large Screens */}
-          <div className="hidden xl:flex flex-col items-end border-r border-slate-700/50 pr-4 mr-4 min-w-[90px]">
+          <div className="hidden xl:flex flex-col items-end border-r border-slate-700/50 pr-4 mr-4 min-w-[110px]">
              <div className="flex items-center gap-1 text-xs text-slate-500 font-medium uppercase mb-0.5">
                 <Calendar size={10} /> Created
              </div>
-             <div className="text-xs font-mono text-slate-300">
-                 {new Date(container.created).toLocaleDateString()}
+             <div className="text-xs font-mono text-slate-300 text-right flex flex-col">
+                 <span>{new Date(container.created).toLocaleDateString()}</span>
+                 <span className="text-[10px] text-slate-500">{new Date(container.created).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
              </div>
           </div>
 
