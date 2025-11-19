@@ -136,13 +136,25 @@ export const ContainerRow: React.FC<ContainerRowProps> = ({ container, onAction,
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="text-right cursor-help" title={`Used ${container.cpu.toFixed(1)}% of ${container.cpuLimit}% CPU limit`}>
+            <div className="flex flex-col items-end cursor-help" title={`Used ${container.cpu.toFixed(1)}% of ${container.cpuLimit}% CPU limit`}>
               <div className="text-xs text-slate-400 font-medium">CPU</div>
-              <div className="text-sm font-mono text-slate-200">{container.cpu.toFixed(1)}%</div>
+              <div className="text-sm font-mono text-slate-200 mb-1">{container.cpu.toFixed(1)}%</div>
+              <div className="w-16 h-1 bg-slate-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-blue-500 transition-all duration-500" 
+                  style={{ width: `${Math.min(100, (container.cpu / container.cpuLimit) * 100)}%` }}
+                />
+              </div>
             </div>
-            <div className="text-right cursor-help" title={`Used ${container.memory}MB of ${container.memoryLimit}MB Memory limit`}>
+            <div className="flex flex-col items-end cursor-help" title={`Used ${container.memory}MB of ${container.memoryLimit}MB Memory limit`}>
               <div className="text-xs text-slate-400 font-medium">MEM</div>
-              <div className="text-sm font-mono text-slate-200">{container.memory} MB</div>
+              <div className="text-sm font-mono text-slate-200 mb-1">{container.memory} MB</div>
+              <div className="w-16 h-1 bg-slate-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-emerald-500 transition-all duration-500" 
+                  style={{ width: `${Math.min(100, (container.memory / container.memoryLimit) * 100)}%` }}
+                />
+              </div>
             </div>
           </div>
 
