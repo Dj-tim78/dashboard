@@ -123,8 +123,8 @@ Naviguez vers le dossier web et clonez le projet :
 
 ```bash
 cd /var/www
-sudo git clone https://votre-repo-git/andorya-dashboard.git
-cd andorya-dashboard
+sudo git clone https://github.com/Dj-tim78/dashboard.git
+cd dashboard
 ```
 
 Installez les dépendances :
@@ -155,7 +155,7 @@ server {
     listen 80;
     server_name votre-ip-ou-domaine;
 
-    root /var/www/andorya-dashboard/dist;
+    root /var/www/dashboard/dist;
     index index.html;
 
     location / {
@@ -199,8 +199,8 @@ CMD ["nginx", "-g", "daemon off;"]
 ### Étape 2 : Lancer
 
 ```bash
-sudo docker build -t andorya-dashboard .
-sudo docker run -d -p 8080:80 --name andorya andorya-dashboard
+sudo docker build -t dashboard .
+sudo docker run -d -p 8080:80 --name andorya dashboard
 ```
 
 Accès : `http://votre-ip:8080`
